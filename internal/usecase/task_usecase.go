@@ -3,27 +3,31 @@ package usecase
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
-	"time"
 	"sync"
+	"time"
 
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/dto"
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/models"
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/repository"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/service"
 	"github.com/gabriel-vasile/mimetype"
 )
 
 type TaskUsecase struct {
-	repo     *repository.TaskRepository
-	maxTasks int
-	active   int
-	mu       sync.Mutex
+	repo       *repository.TaskRepository
+	archiveSvc service.ArchiveService
+	maxTasks   int
+	active     int
+	mu         sync.Mutex
 }
 
-func NewTaskUsecase(repo *repository.TaskRepository, maxTasks int) *TaskUsecase {
+func NewTaskUsecase(repo *repository.TaskRepository, archiveSvc service.ArchiveService, maxTasks int) *TaskUsecase {
 	return &TaskUsecase{
-		repo:     repo,
-		maxTasks: maxTasks,
+		repo:       repo,
+		archiveSvc: archiveSvc,
+		maxTasks:   maxTasks,
 	}
 }
 
@@ -86,12 +90,30 @@ func (u *TaskUsecase) AddURL(taskID string, url string) error {
 		if err := u.repo.AddURL(taskID, url); err != nil {
 			return fmt.Errorf("failed to add URL: %w", err)
 		}
+
+		task, err := u.repo.GetTask(taskID)
+		if err != nil {
+			return err
+		}
+
+		if len(task.URLs) == 3 {
+			go func() {
+				if err := u.archiveSvc.CreateArchive(taskID, task.URLs); err != nil {
+					log.Printf("Archive failed for task %s: %v", taskID, err)
+					u.repo.UpdateTaskStatus(taskID, models.StatusFailed)
+				} else {
+					u.active--
+				}
+			}()
+		}
+
 		return nil
 	}
 
 	if err := u.repo.AddURL(taskID, url); err != nil {
 		return fmt.Errorf("failed to add URL: %w", err)
 	}
+
 	return nil
 }
 

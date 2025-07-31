@@ -68,9 +68,9 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) AddURL(w http.ResponseWriter, r *http.Request) {
-	taskId := r.PathValue("id")
-	if taskId == "" {
-		response.RespondWithError(w, http.StatusBadRequest, "taskId is required", nil)
+	taskID := r.PathValue("id")
+	if taskID == "" {
+		response.RespondWithError(w, http.StatusBadRequest, "taskID is required", nil)
 		return
 	}
 
@@ -88,7 +88,7 @@ func (h *TaskHandler) AddURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.usecase.AddURL(taskId, req.URL); err != nil {
+	if err := h.usecase.AddURL(taskID, req.URL); err != nil {
 		switch {
 		case strings.Contains(err.Error(), "not found"):
 			response.RespondWithError(w, http.StatusNotFound, "Task not found or was deleted", err)
@@ -106,13 +106,13 @@ func (h *TaskHandler) AddURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) GetTaskStatus(w http.ResponseWriter, r *http.Request) {
-	taskId := r.PathValue("id")
-	if taskId == "" {
+	taskID := r.PathValue("id")
+	if taskID == "" {
 		response.RespondWithError(w, http.StatusBadRequest, "task ID is required", nil)
 		return
 	}
 
-	statusResponse, err := h.usecase.GetTaskStatus(taskId)
+	statusResponse, err := h.usecase.GetTaskStatus(taskID)
 	if err != nil {
 		switch {
 		case strings.Contains(err.Error(), "not found"):

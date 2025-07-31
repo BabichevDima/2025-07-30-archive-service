@@ -21,4 +21,5 @@ const (
 	StatusCreated   TaskStatus = "Created"
 	StatusInProcess TaskStatus = "In process"
 	StatusCompleted TaskStatus = "Completed"
+	StatusFailed    TaskStatus = "Failed"
 )

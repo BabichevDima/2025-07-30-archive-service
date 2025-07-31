@@ -1,7 +1,6 @@
 package repository
 
 import (
-	// "fmt"
 	"sync"
 	"time"
 
@@ -95,4 +94,48 @@ func (r *TaskRepository) GetTaskByID(id string) (*models.Task, error) {
 		return nil, errors.New("task not found")
 	}
 	return task, nil
+}
+
+func (r *TaskRepository) GetTask(id string) (*models.Task, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	task, exists := r.tasks[id]
+	if !exists {
+		return nil, errors.New("task not found")
+	}
+	return task, nil
+}
+
+func (r *TaskRepository) UpdateTaskStatus(id string, status models.TaskStatus) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if task, exists := r.tasks[id]; exists {
+		task.Status = status
+		return nil
+	}
+	return errors.New("task not found")
+}
+
+func (r *TaskRepository) UpdateTask(
+	taskID string,
+	zipPath string,
+	status models.TaskStatus,
+	myErrors []string,
+) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	task, exists := r.tasks[taskID]
+	if !exists {
+		return errors.New("task not found")
+	}
+
+	task.ZipPath = zipPath
+	task.Status = status
+	task.Errors = myErrors
+	task.UpdatedAt = time.Now()
+
+	return nil
 }
