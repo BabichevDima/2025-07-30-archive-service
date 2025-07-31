@@ -7,6 +7,7 @@ require gorm.io/gorm v1.30.1
 require go.uber.org/multierr v1.10.0 // indirect
 
 require (
+	github.com/go-faster/errors v0.7.1
 	github.com/google/uuid v1.6.0
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect

@@ -25,7 +25,7 @@ func (r *TaskRepository) Create(task *models.Task) (*models.Task, error) {
 	defer r.mu.Unlock()
 
 	newTask := &models.Task{
-		ID:        generateTaskID(),
+		ID:        generateID(),
 		Name:      task.Name,
 		Status:    models.StatusCreated,
 		URLs:      []string{},
@@ -39,43 +39,43 @@ func (r *TaskRepository) Create(task *models.Task) (*models.Task, error) {
 	return newTask, nil
 }
 
-func generateTaskID() string {
+func generateID() string {
 	return uuid.New().String()
 }
 
 func (r *TaskRepository) GetAllTasks() []*models.Task {
-    r.mu.Lock()
-    defer r.mu.Unlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
-    tasks := make([]*models.Task, 0, len(r.tasks))
-    for _, task := range r.tasks {
-        tasks = append(tasks, task)
-    }
+	tasks := make([]*models.Task, 0, len(r.tasks))
+	for _, task := range r.tasks {
+		tasks = append(tasks, task)
+	}
 
-    return tasks
+	return tasks
 }
 
 func (r *TaskRepository) AddURL(taskID string, url string) error {
-    r.mu.Lock()
-    defer r.mu.Unlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
-    task, exists := r.tasks[taskID]
-    if !exists {
-        return errors.New("task not found")
-    }
+	task, exists := r.tasks[taskID]
+	if !exists {
+		return errors.New("task not found")
+	}
 
-    task.URLs = append(task.URLs, url)
-    task.UpdatedAt = time.Now()
-    return nil
+	task.URLs = append(task.URLs, url)
+	task.UpdatedAt = time.Now()
+	return nil
 }
 
 func (r *TaskRepository) GetTaskByID(id string) (*models.Task, error) {
-    r.mu.Lock()
-    defer r.mu.Unlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
-    task, exists := r.tasks[id]
-    if !exists {
-        return nil, errors.New("task not found")
-    }
-    return task, nil
+	task, exists := r.tasks[id]
+	if !exists {
+		return nil, errors.New("task not found")
+	}
+	return task, nil
 }
