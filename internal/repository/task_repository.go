@@ -43,16 +43,20 @@ func generateID() string {
 	return uuid.New().String()
 }
 
-func (r *TaskRepository) GetAllTasks() []*models.Task {
+func (r *TaskRepository) GetAllTasks() ([]*models.Task, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
+	if r.tasks == nil {
+		return nil, errors.New("storage temporarily unavailable")
+	}
 
 	tasks := make([]*models.Task, 0, len(r.tasks))
 	for _, task := range r.tasks {
 		tasks = append(tasks, task)
 	}
 
-	return tasks
+	return tasks, nil
 }
 
 func (r *TaskRepository) AddURL(taskID string, url string) error {

@@ -53,11 +53,17 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
-
-	// TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	tasks := h.usecase.GetAllTasks()
-
-	response.RespondWithJSON(w, http.StatusOK, tasks)
+	tasksResponse, err := h.usecase.GetAllTasks()
+	if err != nil {
+		switch {
+		case strings.Contains(err.Error(), "unavailable"):
+			response.RespondWithError(w, http.StatusServiceUnavailable, "Service unavailable", err)
+		default:
+			response.RespondWithError(w, http.StatusInternalServerError, "Failed to get tasks", err)
+		}
+		return
+	}
+	response.RespondWithJSON(w, http.StatusOK, tasksResponse)
 }
 
 func (h *TaskHandler) AddURL(w http.ResponseWriter, r *http.Request) {
