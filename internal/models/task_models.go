@@ -18,9 +18,7 @@ type Task struct {
 type TaskStatus string
 
 const (
-	StatusCreated    TaskStatus = "created"
-	StatusProcessing TaskStatus = "in process"
-	StatusCompleted  TaskStatus = "completed"
-	// check if "failed" status neaded
-	// StatusFailed     TaskStatus = "failed"
+	StatusCreated   TaskStatus = "Created"
+	StatusInProcess TaskStatus = "In process"
+	StatusCompleted TaskStatus = "Completed"
 )

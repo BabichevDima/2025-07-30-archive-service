@@ -1,6 +1,7 @@
 package repository
 
 import (
+	// "fmt"
 	"sync"
 	"time"
 
@@ -68,7 +69,19 @@ func (r *TaskRepository) AddURL(taskID string, url string) error {
 		return errors.New("task not found")
 	}
 
+	if len(task.URLs) >= 3 {
+		return errors.New("Validation Error. max 3 files per task")
+	}
+
 	task.URLs = append(task.URLs, url)
+	if task.Status == models.StatusCreated {
+		task.Status = models.StatusInProcess
+	}
+
+	if len(task.URLs) == 3 {
+		task.Status = models.StatusCompleted
+	}
+
 	task.UpdatedAt = time.Now()
 	return nil
 }

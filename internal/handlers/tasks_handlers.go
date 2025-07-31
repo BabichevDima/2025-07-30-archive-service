@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -67,35 +68,44 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TaskHandler) AddURL(w http.ResponseWriter, r *http.Request) {
-
-	// TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	taskId := r.PathValue("id")
 	if taskId == "" {
-		response.RespondWithError(w, http.StatusBadRequest, "task ID is required", nil)
+		response.RespondWithError(w, http.StatusBadRequest, "taskId is required", nil)
 		return
 	}
 
-	var req dto.AddURLRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.RespondWithError(w, http.StatusBadRequest, "Invalid request payload", err)
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	var req dto.URLRequest
+	err := decoder.Decode(&req)
+	if err != nil {
+		switch {
+		case strings.Contains(err.Error(), "unknown field"):
+			response.RespondWithError(w, http.StatusTooManyRequests, "Unknown field", err)
+		default:
+			response.RespondWithError(w, http.StatusBadRequest, "Invalid request payload", err)
+		}
 		return
 	}
 
 	if err := h.usecase.AddURL(taskId, req.URL); err != nil {
-		status := http.StatusInternalServerError
-		if strings.Contains(err.Error(), "not found") {
-			status = http.StatusNotFound
+		switch {
+		case strings.Contains(err.Error(), "not found"):
+			response.RespondWithError(w, http.StatusNotFound, "Task not found or was deleted", err)
+		case strings.Contains(err.Error(), "Validation Error"):
+			response.RespondWithError(w, http.StatusUnprocessableEntity, "You can only upload up to 3 files per task", err)
+		case strings.Contains(err.Error(), "unavailable"):
+			response.RespondWithError(w, http.StatusUnprocessableEntity, fmt.Sprintf("URL is not available: %v", req.URL), err)
+		default:
+			response.RespondWithError(w, http.StatusInternalServerError, "Internal server error", err)
 		}
-		response.RespondWithError(w, status, "Invalid request payload", err)
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	response.RespondWithJSON(w, http.StatusNoContent, nil)
 }
 
 func (h *TaskHandler) GetTaskStatus(w http.ResponseWriter, r *http.Request) {
-
-	// TODO: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	taskId := r.PathValue("id")
 	if taskId == "" {
 		response.RespondWithError(w, http.StatusBadRequest, "task ID is required", nil)
@@ -104,11 +114,12 @@ func (h *TaskHandler) GetTaskStatus(w http.ResponseWriter, r *http.Request) {
 
 	statusResponse, err := h.usecase.GetTaskStatus(taskId)
 	if err != nil {
-		statusCode := http.StatusInternalServerError
-		if strings.Contains(err.Error(), "not found") {
-			statusCode = http.StatusNotFound
+		switch {
+		case strings.Contains(err.Error(), "not found"):
+			response.RespondWithError(w, http.StatusNotFound, "not found", err)
+		default:
+			response.RespondWithError(w, http.StatusInternalServerError, "Internal server error", err)
 		}
-		response.RespondWithError(w, statusCode, "Invalid request payload", err)
 		return
 	}
 

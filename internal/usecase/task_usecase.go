@@ -2,12 +2,15 @@ package usecase
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"time"
 	"sync"
 
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/dto"
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/models"
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/repository"
-	// "errors"
+	"github.com/gabriel-vasile/mimetype"
 )
 
 type TaskUsecase struct {
@@ -58,8 +61,35 @@ func (u *TaskUsecase) GetAllTasks() ([]*models.Task, error) {
 	return u.repo.GetAllTasks()
 }
 
-func (uc *TaskUsecase) AddURL(taskID string, url string) error {
-	if err := uc.repo.AddURL(taskID, url); err != nil {
+func (u *TaskUsecase) AddURL(taskID string, url string) error {
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	respFileData, err := client.Get(url)
+	if err != nil {
+		return fmt.Errorf("failed to download file by path: %v", url)
+	}
+	defer respFileData.Body.Close()
+
+	if respFileData.StatusCode != http.StatusOK {
+		return fmt.Errorf("file unavailable (status %d): %s", respFileData.StatusCode, url)
+	}
+
+	limitedReader := io.LimitReader(respFileData.Body, 512)
+	mime, err := mimetype.DetectReader(limitedReader)
+	if err != nil {
+		return fmt.Errorf("failed to detect file type: %v", err)
+	}
+
+	if mime.String() == "application/pdf" || mime.String() == "image/jpeg" {
+		if err := u.repo.AddURL(taskID, url); err != nil {
+			return fmt.Errorf("failed to add URL: %w", err)
+		}
+		return nil
+	}
+
+	if err := u.repo.AddURL(taskID, url); err != nil {
 		return fmt.Errorf("failed to add URL: %w", err)
 	}
 	return nil
