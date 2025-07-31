@@ -3,12 +3,16 @@ package main
 import (
 	"context"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/handlers"
 	router "github.com/BabichevDima/2025-07-30-archive-service/internal/http"
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/middleware"
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/repository"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/service"
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/usecase"
 	"github.com/BabichevDima/2025-07-30-archive-service/pkg/logger"
 	"go.uber.org/zap"
@@ -18,8 +22,11 @@ func main() {
 	logger.Init()
 	defer logger.L.Sync()
 
+	storPath := "./storage"
+
 	taskRepo := repository.NewTaskRepository()
-	taskUsecase := usecase.NewTaskUsecase(taskRepo, 3)
+	archiveService := service.NewArchiveServiceImpl(taskRepo, storPath)
+	taskUsecase := usecase.NewTaskUsecase(taskRepo, archiveService, 3)
 	taskHandler := handlers.NewTaskHandler(taskUsecase)
 
 	mux := http.NewServeMux()
@@ -31,27 +38,40 @@ func main() {
 		Handler:      handler,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  15 * time.Second,
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	serverCtx, serverStopCtx := context.WithCancel(context.Background())
 
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
-		logger.Info("HTTP server is listening",
-			zap.String("address", "http://localhost"+server.Addr),
-		)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatal("Failed to start server", zap.Error(err))
+		<-sig
+
+		shutdownCtx, cancel := context.WithTimeout(serverCtx, 30*time.Second)
+		defer cancel()
+
+		go func() {
+			<-shutdownCtx.Done()
+			if shutdownCtx.Err() == context.DeadlineExceeded {
+				logger.Fatal("Graceful shutdown timed out.. forcing exit")
+			}
+		}()
+
+		logger.Info("Starting graceful shutdown...")
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			logger.Error("Server shutdown failed", zap.Error(err))
 		}
+		serverStopCtx()
 	}()
 
-	<-ctx.Done()
-	logger.Info("Shutting down server...")
-
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		logger.Error("Server shutdown failed", zap.Error(err))
+	logger.Info("HTTP server is listening",
+		zap.String("address", "http://localhost"+server.Addr),
+	)
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		logger.Fatal("Failed to start server", zap.Error(err))
 	}
-	logger.Info("Server stopped")
+
+	<-serverCtx.Done()
+	logger.Info("Server stopped gracefully")
 }

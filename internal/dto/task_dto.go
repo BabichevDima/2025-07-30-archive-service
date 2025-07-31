@@ -19,10 +19,10 @@ type ResponseTask struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type AddURLRequest struct {
+type URLRequest struct {
 	URL string `json:"url" binding:"required,url"`
 }
 
 type TaskStatusResponse struct {
-    Status    string    `json:"status"`
+	Status string `json:"status"`
 }

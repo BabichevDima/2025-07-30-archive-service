@@ -68,7 +68,19 @@ func (r *TaskRepository) AddURL(taskID string, url string) error {
 		return errors.New("task not found")
 	}
 
+	if len(task.URLs) >= 3 {
+		return errors.New("Validation Error. max 3 files per task")
+	}
+
 	task.URLs = append(task.URLs, url)
+	if task.Status == models.StatusCreated {
+		task.Status = models.StatusInProcess
+	}
+
+	if len(task.URLs) == 3 {
+		task.Status = models.StatusCompleted
+	}
+
 	task.UpdatedAt = time.Now()
 	return nil
 }
@@ -82,4 +94,48 @@ func (r *TaskRepository) GetTaskByID(id string) (*models.Task, error) {
 		return nil, errors.New("task not found")
 	}
 	return task, nil
+}
+
+func (r *TaskRepository) GetTask(id string) (*models.Task, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	task, exists := r.tasks[id]
+	if !exists {
+		return nil, errors.New("task not found")
+	}
+	return task, nil
+}
+
+func (r *TaskRepository) UpdateTaskStatus(id string, status models.TaskStatus) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if task, exists := r.tasks[id]; exists {
+		task.Status = status
+		return nil
+	}
+	return errors.New("task not found")
+}
+
+func (r *TaskRepository) UpdateTask(
+	taskID string,
+	zipPath string,
+	status models.TaskStatus,
+	myErrors []string,
+) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	task, exists := r.tasks[taskID]
+	if !exists {
+		return errors.New("task not found")
+	}
+
+	task.ZipPath = zipPath
+	task.Status = status
+	task.Errors = myErrors
+	task.UpdatedAt = time.Now()
+
+	return nil
 }
