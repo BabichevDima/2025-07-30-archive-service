@@ -7,7 +7,6 @@ import (
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/dto"
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/models"
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/repository"
-
 	// "errors"
 )
 
@@ -55,7 +54,7 @@ func (u *TaskUsecase) Create(request dto.RequestTask) (dto.ResponseTask, error) 
 	}, nil
 }
 
-func (u *TaskUsecase) GetAllTasks() []*models.Task {
+func (u *TaskUsecase) GetAllTasks() ([]*models.Task, error) {
 	return u.repo.GetAllTasks()
 }
 
