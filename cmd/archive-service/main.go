@@ -8,12 +8,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/handlers"
 	router "github.com/BabichevDima/2025-07-30-archive-service/internal/http"
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/middleware"
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/repository"
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/service"
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/usecase"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/handlers"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/middleware"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/repository"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/service"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/usecase"
 	"github.com/BabichevDima/2025-07-30-archive-service/pkg/logger"
 	"go.uber.org/zap"
 )

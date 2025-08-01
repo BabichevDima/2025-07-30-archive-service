@@ -3,7 +3,7 @@ package router
 import (
 	"net/http"
 
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/handlers"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/handlers"
 )
 
 func RegisterRoutes(mux *http.ServeMux, taskHandler *handlers.TaskHandler) {
