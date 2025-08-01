@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/dto"
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/models"
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/repository"
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/service"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/models"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/repository"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/service"
 	"github.com/gabriel-vasile/mimetype"
 )
 
