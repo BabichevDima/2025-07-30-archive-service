@@ -8,7 +8,7 @@ import (
 
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/dto"
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/response"
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/usecase"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/usecase"
 )
 
 type TaskHandler struct {

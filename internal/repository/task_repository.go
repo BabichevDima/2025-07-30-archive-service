@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/models"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/models"
 	"github.com/google/uuid"
 	"github.com/pingcap/errors"
 )
