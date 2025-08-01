@@ -19,6 +19,32 @@ func NewTaskHandler(u *usecase.TaskUsecase) *TaskHandler {
 	return &TaskHandler{usecase: u}
 }
 
+// @title Archive Service API
+// @version 1.0
+// @description Сервис для создания ZIP архивов из файлов
+
+// @contact.name API Support
+// @contact.email support@archive-service.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /api
+// @schemes http
+
+// Create godoc
+// @Summary Создать новую задачу архивации
+// @Description Создает новую задачу для последующего добавления URL файлов
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param request body dto.RequestTask true "Данные для создания задачи"
+// @Success 201 {object} dto.ResponseTask
+// @Failure 400 {object} response.BadRequestError
+// @Failure 429 {object} response.ServerBusyRequestError
+// @Failure 500 {object} response.InternalServerError
+// @Router /api/tasks [post]
 func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
@@ -27,7 +53,7 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case strings.Contains(err.Error(), "unknown field"):
-			response.RespondWithError(w, http.StatusTooManyRequests, "Unknown field", err)
+			response.RespondWithError(w, http.StatusBadRequest, "Unknown field", err)
 		default:
 			response.RespondWithError(w, http.StatusBadRequest, "Invalid request payload", err)
 		}
@@ -53,6 +79,14 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 	response.RespondWithJSON(w, http.StatusCreated, taskResponse)
 }
 
+// GetAllTasks godoc
+// @Summary Получить список всех задач
+// @Description Возвращает список всех задач архивации
+// @Tags tasks
+// @Produce json
+// @Success 200 {array} dto.ResponseTask
+// @Failure 500 {object} response.InternalServerError
+// @Router /api/tasks [get]
 func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	tasksResponse, err := h.usecase.GetAllTasks()
 	if err != nil {
@@ -60,13 +94,27 @@ func (h *TaskHandler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 		case strings.Contains(err.Error(), "unavailable"):
 			response.RespondWithError(w, http.StatusServiceUnavailable, "Service unavailable", err)
 		default:
-			response.RespondWithError(w, http.StatusInternalServerError, "Failed to get tasks", err)
+			response.RespondWithError(w, http.StatusInternalServerError, "Internal server error", err)
 		}
 		return
 	}
 	response.RespondWithJSON(w, http.StatusOK, tasksResponse)
 }
 
+// AddURL godoc
+// @Summary Добавить URL в задачу
+// @Description Добавляет URL файла для загрузки в указанную задачу
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param id path string true "ID задачи"
+// @Param request body dto.URLRequest true "URL файла"
+// @Success 204
+// @Failure 400 {object} response.BadRequestError
+// @Failure 404 {object} response.NotFoundRequestError
+// @Failure 422 {object} response.ConstrainsErrorResponse
+// @Failure 500 {object} response.InternalServerError
+// @Router /api/tasks/{id}/urls [post]
 func (h *TaskHandler) AddURL(w http.ResponseWriter, r *http.Request) {
 	taskID := r.PathValue("id")
 	if taskID == "" {
@@ -81,7 +129,7 @@ func (h *TaskHandler) AddURL(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case strings.Contains(err.Error(), "unknown field"):
-			response.RespondWithError(w, http.StatusTooManyRequests, "Unknown field", err)
+			response.RespondWithError(w, http.StatusBadRequest, "Unknown field", err)
 		default:
 			response.RespondWithError(w, http.StatusBadRequest, "Invalid request payload", err)
 		}
@@ -105,6 +153,17 @@ func (h *TaskHandler) AddURL(w http.ResponseWriter, r *http.Request) {
 	response.RespondWithJSON(w, http.StatusNoContent, nil)
 }
 
+// GetTaskStatus godoc
+// @Summary Получить статус задачи
+// @Description Возвращает текущий статус задачи и ссылку на архив (если готов)
+// @Tags tasks
+// @Produce json
+// @Param id path string true "ID задачи"
+// @Success 200 {object} dto.TaskStatusResponse
+// @Failure 400 {object} response.BadRequestError
+// @Failure 404 {object} response.NotFoundRequestError
+// @Failure 500 {object} response.InternalServerError
+// @Router /api/tasks/{id}/status [get]
 func (h *TaskHandler) GetTaskStatus(w http.ResponseWriter, r *http.Request) {
 	taskID := r.PathValue("id")
 	if taskID == "" {

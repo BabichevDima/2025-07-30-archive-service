@@ -34,3 +34,7 @@ cd 2025-07-30-archive-service
 ```bash
 go run cmd/archive-service/main.go
 ```
+
+### 📚 Документация
+
+🔗 http://localhost:8080/swagger/index.html

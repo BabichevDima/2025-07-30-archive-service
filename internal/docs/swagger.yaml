@@ -1,0 +1,216 @@
+definitions:
+  dto.RequestTask:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  dto.ResponseTask:
+    properties:
+      created_at:
+        type: string
+      errors:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+      urls:
+        items:
+          type: string
+        type: array
+      zip_path:
+        type: string
+    type: object
+  dto.TaskStatusResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  dto.URLRequest:
+    properties:
+      url:
+        type: string
+    required:
+    - url
+    type: object
+  response.BadRequestError:
+    properties:
+      code:
+        example: 400
+        type: integer
+      message:
+        example: Invalid request payload
+        type: string
+    type: object
+  response.ConstrainsErrorResponse:
+    properties:
+      code:
+        example: 422
+        type: integer
+      message:
+        example: You can only upload up to 3 files per task
+        type: string
+    type: object
+  response.InternalServerError:
+    properties:
+      code:
+        example: 500
+        type: integer
+      message:
+        example: Internal Server Error
+        type: string
+    type: object
+  response.NotFoundRequestError:
+    properties:
+      code:
+        example: 404
+        type: integer
+      message:
+        example: not found
+        type: string
+    type: object
+  response.ServerBusyRequestError:
+    properties:
+      code:
+        example: 429
+        type: integer
+      message:
+        example: Server is busy
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/tasks:
+    get:
+      description: Возвращает список всех задач архивации
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ResponseTask'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerError'
+      summary: Получить список всех задач
+      tags:
+      - tasks
+    post:
+      consumes:
+      - application/json
+      description: Создает новую задачу для последующего добавления URL файлов
+      parameters:
+      - description: Данные для создания задачи
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RequestTask'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ResponseTask'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestError'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ServerBusyRequestError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerError'
+      summary: Создать новую задачу архивации
+      tags:
+      - tasks
+  /api/tasks/{id}/status:
+    get:
+      description: Возвращает текущий статус задачи и ссылку на архив (если готов)
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TaskStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundRequestError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerError'
+      summary: Получить статус задачи
+      tags:
+      - tasks
+  /api/tasks/{id}/urls:
+    post:
+      consumes:
+      - application/json
+      description: Добавляет URL файла для загрузки в указанную задачу
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: URL файла
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.URLRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundRequestError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.ConstrainsErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerError'
+      summary: Добавить URL в задачу
+      tags:
+      - tasks
+swagger: "2.0"
