@@ -11,9 +11,9 @@ import (
 	router "github.com/BabichevDima/2025-07-30-archive-service/internal/http"
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/handlers"
 	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/middleware"
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/repository"
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/service"
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/usecase"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/repository"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/service"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/usecase"
 	"github.com/BabichevDima/2025-07-30-archive-service/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -67,6 +67,7 @@ func main() {
 
 	logger.Info("HTTP server is listening",
 		zap.String("address", "http://localhost"+server.Addr),
+		zap.String("docs", "http://localhost"+server.Addr+"/swagger"),
 	)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		logger.Fatal("Failed to start server", zap.Error(err))

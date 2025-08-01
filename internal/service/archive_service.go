@@ -9,8 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/models"
-	"github.com/BabichevDima/2025-07-30-archive-service/internal/http/repository"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/models"
+	"github.com/BabichevDima/2025-07-30-archive-service/internal/repository"
 )
 
 type ArchiveService interface {

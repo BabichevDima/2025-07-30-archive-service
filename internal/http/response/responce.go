@@ -32,3 +32,33 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.WriteHeader(code)
 	w.Write(dat)
 }
+
+// Пример для 400 Bad Request
+type BadRequestError struct {
+	Code    int    `json:"code" example:"400"`
+	Message string `json:"message" example:"Invalid request payload"`
+}
+
+// Пример для 404 Busy
+type NotFoundRequestError struct {
+	Code    int    `json:"code" example:"404"`
+	Message string `json:"message" example:"not found"`
+}
+
+// Пример для 422 Busy
+type ConstrainsErrorResponse struct {
+	Code    int    `json:"code" example:"422"`
+	Message string `json:"message" example:"You can only upload up to 3 files per task"`
+}
+
+// Пример для 429 Busy
+type ServerBusyRequestError struct {
+	Code    int    `json:"code" example:"429"`
+	Message string `json:"message" example:"Server is busy"`
+}
+
+// Пример для 500 Internal Server Error
+type InternalServerError struct {
+	Code    int    `json:"code" example:"500"`
+	Message string `json:"message" example:"Internal Server Error"`
+}
